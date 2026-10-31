@@ -16,8 +16,6 @@ import fr.madu59.ptp.physics.PreviewImpact;
 import fr.madu59.ptp.physics.ProjectileData;
 import fr.madu59.ptp.registry.ProjectileRegistry;
 import fr.madu59.ptp.util.RenderUtils;
-import fr.madu59.ptp.HandshakeNetworking.HANDSHAKE_C2SPayload;
-import fr.madu59.ptp.HandshakeNetworking.HANDSHAKE_S2CPayload;
 import fr.madu59.ptp.compat.ModCompat;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -26,8 +24,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -56,7 +52,6 @@ public class PtpClient implements ClientModInitializer {
 
     private static final Minecraft client = Minecraft.getInstance();
     public static final Logger LOGGER = LogManager.getLogger("ptpClient");
-    private static boolean serverHasMod = false;
     private static KeyMapping itemDropKey;
     private static KeyMapping toggleKey;
     private static InteractionHand interactionHand = InteractionHand.MAIN_HAND;
@@ -69,33 +64,8 @@ public class PtpClient implements ClientModInitializer {
         ProjectileRegistry.init();
         registerKeyMappings();
 
-        // Reset handshake state on join
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            serverHasMod = false;
-
-            // Always enabled in singleplayer
-            if (client.hasSingleplayerServer() || client.getCurrentServer().isLan()) {
-                serverHasMod = true;
-                return;
-            }
-
-            // Send handshake to server
-            if(ClientPlayNetworking.canSend(HANDSHAKE_C2SPayload.ID)) {
-                LOGGER.info("[PTP] Sending handshake to server...");
-                ClientPlayNetworking.send(new HANDSHAKE_C2SPayload("Check if is installed on server"));
-            }
-            else{
-                LOGGER.info("[PTP] Can't send handshake to server! Server mod might be too old or missing.");
-            }
-        });
-
-        // Receive handshake reply
-        ClientPlayNetworking.registerGlobalReceiver(HANDSHAKE_S2CPayload.ID,
-            (payload, context) -> {
-                LOGGER.info("[PTP] Received handshake from server!");
-                serverHasMod = true;
-        });
-        
+        // Trajectory calculations and rendering run entirely on this client.
+        // No server-side mod or custom networking is required.
         LevelRenderEvents.AFTER_SOLID_FEATURES.register(context -> {
             renderOverlay(context);
         });
@@ -360,11 +330,12 @@ public class PtpClient implements ClientModInitializer {
     }
 
     public static boolean isEnabled() {
-        return client.hasSingleplayerServer() || serverHasMod;
+        // Rendering is private to this client, both in singleplayer and multiplayer.
+        return client.player != null && client.level != null;
     }
 
     public static boolean isEnabled(ProjectileData projectileData) {
-        return client.hasSingleplayerServer() || serverHasMod || projectileData.bypassAntiCheat;
+        return isEnabled();
     }
 
     public static float getTickProgress(){
