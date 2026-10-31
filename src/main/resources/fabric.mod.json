@@ -13,11 +13,8 @@
 	},
 	"license": "MIT",
 	"icon": "assets/ptp/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"fr.madu59.ptp.Ptp"
-		],
 		"client": [
 			"fr.madu59.ptp.PtpClient"
 		],

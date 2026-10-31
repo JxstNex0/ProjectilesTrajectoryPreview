@@ -29,9 +29,15 @@ To edit the settings of the mod:
 - Minecraft Projectiles often have a random offset, so the actual impact may sometime differs a bit from the preview.
 - Modded items are not yet supported. If you want compatibility with a specific mod, open an issue on Github and suggest it, I'll do my best to add it.
 
-## 🛑 Usage on servers 
+## 🌐 Multiplayer and private use
 
-This mod doesn't work on servers to prevent using it as a cheat in PVP. If you want to have it on your custom servers, you still can, just install the mod on both, the client and the server.
+This fork runs entirely on the client in singleplayer, on private servers, and on public multiplayer servers. Install the mod **only on your Minecraft client**; server installation and a server-side handshake are not required.
+
+The preview is drawn locally: only you can see your trajectory lines and impact highlights, and no trajectory information is sent to the server or other players by this mod.
+
+The trajectory is a prediction based on client-visible world data. Server-side physics, plugins, latency, or random projectile spread can cause deviations. Respect the rules of any server you join; some servers prohibit client-side aiming assistance.
+
+Build with `./gradlew build` (or `gradlew.bat build` on Windows), then install the generated JAR from `build/libs/` into your client's `mods` folder along with Fabric API.
 
 ## 📦 Modpack
 
